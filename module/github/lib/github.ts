@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { headers } from "next/headers";
 
-//Getting github access token
+// Getting github access token
 
 export const getGithubToken = async () => {
   const session = await auth.api.getSession({
@@ -21,42 +21,40 @@ export const getGithubToken = async () => {
     },
   });
   if (!account?.accessToken) {
-    throw new Error("No gihub access token found");
+    throw new Error("No github access token found");
   }
 
   return account.accessToken;
 };
 
-export async function fetchUserContribution(token: String, username: String) {
+export async function fetchUserContribution(token: string, username: string) {
   const octokit = new Octokit({ auth: token });
 
   const query = `
-    query($username:String!){
-        user(login:$username){
-            contributionCollection{
-                contributionCalender{
-                    totalContributions
-                    weeks{
-                        contributionDays{
-                            contributionCount
-                            data
-                            color
-                        }
-                    }
-                }
+    query($username: String!) {
+      user(login: $username) {
+        contributionsCollection {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              contributionDays {
+                contributionCount
+                date
+                color
+              }
             }
+          }
         }
+      }
     }`;
 
-
-    try{
-        const response:any=await octokit.graphql(query,{
-            username
-        })
-        return response.user.contributionCollection.contributionCalender
-    } catch(error){
-
-    }
+  try {
+    const response: any = await octokit.graphql(query, {
+      username,
+    });
+    return response.user.contributionsCollection.contributionCalendar;
+  } catch (error) {
+    console.error("Error fetching GitHub contribution calendar:", error);
+    return null;
+  }
 }
-
-
